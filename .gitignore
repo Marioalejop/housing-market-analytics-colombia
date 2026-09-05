@@ -1,0 +1,12 @@
+data/raw/*
+data/interim/*
+data/processed/*
+db/*.db
+artefactos/*
+logs/*
+reportes/figuras/*
+reportes/tablas/*
+__pycache__/
+*.pyc
+.venv/
+!.gitkeep

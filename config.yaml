@@ -1,0 +1,91 @@
+# =====================================================================
+# Configuracion central del proyecto.
+# Todo lo que pueda cambiar (rutas, reglas de negocio, umbrales) vive
+# aqui y NO dentro del codigo. Asi el pipeline es reproducible y
+# auditable, que es lo que se espera de un proceso ETL serio.
+# =====================================================================
+
+proyecto:
+  nombre: "Valoracion y segmentacion del mercado de vivienda"
+  version: "1.0"
+
+rutas:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  base_datos: "db/vivienda.db"
+  artefactos: "artefactos"
+  figuras: "reportes/figuras"
+  tablas: "reportes/tablas"
+  logs: "logs"
+
+extraccion:
+  # Nombre del archivo crudo dentro de data/raw
+  archivo: "co_properties.csv"
+  separador: ","
+  encoding: "utf-8"
+  # Lee en bloques para no reventar la memoria con ~1M de filas
+  chunksize: 200000
+  # Muestra opcional para desarrollo rapido (null = usar todo)
+  muestra_filas: null
+
+# Mapeo COLUMNA_ORIGEN -> nombre_canonico.
+# Si descargas otro dataset, este es el UNICO bloque que debes tocar.
+mapeo_columnas:
+  start_date: fecha_publicacion
+  lat: latitud
+  lon: longitud
+  l1: pais
+  l2: departamento
+  l3: ciudad
+  l4: barrio
+  rooms: habitaciones
+  bedrooms: dormitorios
+  bathrooms: banos
+  surface_total: superficie_total
+  surface_covered: superficie_cubierta
+  price: precio
+  currency: moneda
+  property_type: tipo_propiedad
+  operation_type: tipo_operacion
+
+transformacion:
+  # --- Filtros de negocio (Etapa 1: que problema respondemos) ---
+  operaciones_validas: ["Venta"]
+  tipos_propiedad_validos: ["Casa", "Apartamento"]
+  moneda_objetivo: "COP"
+  # Tasa usada para homologar avisos publicados en USD
+  tasa_usd_cop: 4000
+
+  # --- Reglas de calidad de datos (Etapa 4: pre-procesamiento) ---
+  columnas_obligatorias: ["precio", "superficie_total", "ciudad"]
+  clave_duplicados: ["ciudad", "barrio", "superficie_total", "habitaciones", "banos", "precio"]
+
+  rangos_validos:
+    precio: [30000000, 5000000000]      # 30 M a 5.000 M COP
+    superficie_total: [20, 1000]         # m2
+    habitaciones: [1, 15]
+    banos: [1, 10]
+    precio_m2: [500000, 20000000]        # COP por m2
+
+  # Recorte de colas por percentiles sobre el precio por m2
+  percentil_inferior: 0.01
+  percentil_superior: 0.99
+
+no_supervisado:
+  variables: ["superficie_total", "habitaciones", "banos", "precio_m2", "latitud", "longitud"]
+  contaminacion_isolation_forest: 0.02   # % esperado de avisos anomalos
+  k_min: 2
+  k_max: 10
+  k_elegido: null       # null = lo decide la silueta automaticamente
+  semilla: 42
+
+supervisado:
+  objetivo: "precio"
+  usar_cluster_como_variable: true
+  test_size: 0.2
+  semilla: 42
+  red_neuronal:
+    epocas: 150
+    batch_size: 64
+    paciencia_early_stopping: 15
