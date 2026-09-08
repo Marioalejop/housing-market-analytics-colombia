@@ -44,6 +44,10 @@ NUMERICAS = [
     "superficie_total", "superficie_cubierta", "habitaciones", "banos",
     "latitud", "longitud", "area_por_habitacion", "ratio_bano_habitacion", "pct_cubierta",
 ]
+# NOTA: 'dias_publicado' se excluye a proposito. Solo se conoce cuando el aviso
+# ya salio del portal, y el modelo debe sugerir un precio EN EL MOMENTO DE
+# PUBLICAR. Incluirlo seria usar informacion del futuro. Esa variable se usa
+# para analizar la rotacion (vista v_rotacion), no para estimar el precio.
 CATEGORICAS = ["tipo_propiedad", "segmento_tamano", "ciudad", "id_segmento"]
 TOP_CIUDADES = 30
 

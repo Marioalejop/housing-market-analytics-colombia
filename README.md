@@ -26,6 +26,10 @@ supervisado y no supervisado, y salida preparada para Power BI.
 > **Decisión que habilita:** sugerir un precio de publicación, priorizar la captación de
 > inventario por segmento y alertar sobre oportunidades.
 
+El análisis de causas está en [`docs/ishikawa_etapa1.png`](docs/ishikawa_etapa1.png), generado
+por código con `python herramientas/generar_ishikawa.py`. La ficha de la Etapa 1 en Word se
+maneja en la carpeta local y se sube a la plataforma de la Universidad; no va al repositorio.
+
 ---
 
 ## 2. Datos (Etapa 2)
@@ -108,6 +112,8 @@ proyecto_vivienda/
 │   ├── eda/explorar.py      Exploración
 │   ├── modelos/             no_supervisado.py · supervisado.py
 │   └── utils/               log.py · auditoria.py
+├── herramientas/            Utilidades: generador de datos de prueba y del Ishikawa
+├── docs/                    Diagramas de las entregas (Ishikawa)
 ├── artefactos/              Modelos entrenados (.pkl / .keras)
 └── reportes/                figuras/ y tablas/ para el informe
 ```
@@ -125,10 +131,17 @@ que se puede demostrar cuántas filas entraron, cuántas salieron y por qué:
 | 2 | Filtro de negocio | Solo operaciones de **venta**, solo **casas y apartamentos** |
 | 3 | Homologación de moneda | Avisos en USD convertidos a COP con la tasa del config |
 | 4 | Tratamiento de nulos | Imputación deducida (área), contextual (baños por ciudad+habitaciones) y etiquetado (barrio). Solo se eliminan filas sin precio o sin área |
-| 5 | Duplicados | Filas idénticas + clave de negocio (mismo inmueble republicado) |
-| 6 | Enriquecimiento | `precio_m2`, ratios, calendario, `segmento_tamano` |
+| 5 | Duplicados | Filas idénticas + **identificador del aviso** + clave de negocio (mismo inmueble republicado) |
+| 6 | Enriquecimiento | `precio_m2`, ratios, calendario, `segmento_tamano` y **`dias_publicado`** (rotación) |
 | 7 | Rangos de dominio | Descarta lo físicamente imposible (precio 0, casa de 3 m², 40 baños) |
 | 8 | Recorte de colas | Percentiles 1 % y 99 % del precio por m² |
+
+**Rotación del inventario:** `dias_publicado` se calcula como la diferencia entre la fecha de
+baja y la de publicación. Properati marca los avisos aún vigentes con la fecha centinela
+`9999-12-31`; esos casos **no son un dato faltante**, son avisos activos, así que quedan con
+`dias_publicado` nulo, `esta_activo = 1` y **no se descartan** en el filtro de rangos. Esta
+variable es la que sustenta la causa *"no hay revisión periódica de avisos con mucho tiempo
+publicados"* del diagrama de Ishikawa.
 
 **Carga:** la tabla plana se descompone en un **esquema en estrella**
 (`hecho_inmueble` + `dim_ubicacion`, `dim_tiempo`, `dim_tipo`, `dim_segmento`), que es
@@ -164,6 +177,11 @@ varianza. Las métricas siempre se reportan en pesos.
 Métricas: **MAE**, **RMSE**, **R²** y **MAPE**, guardadas en `modelo_metricas`.
 Se añade **importancia por permutación** para explicar qué mueve realmente el precio.
 
+> **`dias_publicado` se excluye a propósito del modelo de precio.** Solo se conoce cuando el
+> aviso ya salió del portal, y el modelo debe sugerir un precio *en el momento de publicar*:
+> incluirlo sería usar información del futuro. Esa variable se usa para analizar la rotación
+> (vista `v_rotacion`), no para estimar el precio.
+
 ---
 
 ## 7. Interpretación y Power BI (Etapa 6)
@@ -179,6 +197,7 @@ Se añade **importancia por permutación** para explicar qué mueve realmente el
 | `v_evolucion_mensual` | Gráfico de tendencia |
 | `v_segmentos` | Filtro y comparativa entre segmentos del K-Means |
 | `v_oportunidades` | Avisos publicados >15 % por debajo del valor estimado |
+| `v_rotacion` | Días publicado y % de avisos lentos (>180 días) por ciudad y segmento |
 
 ---
 

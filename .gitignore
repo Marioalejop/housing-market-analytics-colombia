@@ -6,6 +6,14 @@ artefactos/*
 logs/*
 reportes/figuras/*
 reportes/tablas/*
+# Documentos de la entrega: se manejan en la carpeta local y se suben a la
+# plataforma de la Universidad, no al repositorio (son binarios: no se puede
+# ver el diff ni fusionar si dos personas los editan a la vez).
+*.docx
+*.doc
+*.pdf
+*.pptx
+
 __pycache__/
 *.pyc
 .venv/

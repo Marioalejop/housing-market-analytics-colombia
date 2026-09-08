@@ -55,6 +55,7 @@ CREATE TABLE dim_segmento (
 
 CREATE TABLE hecho_inmueble (
     id_inmueble          INTEGER PRIMARY KEY,
+    id_aviso             TEXT,                -- identificador original del aviso
     id_ubicacion         INTEGER,
     id_tiempo            INTEGER,
     id_tipo              INTEGER,
@@ -73,6 +74,9 @@ CREATE TABLE hecho_inmueble (
     ratio_bano_habitacion REAL,
     pct_cubierta         REAL,
     segmento_tamano      TEXT,
+
+    dias_publicado       REAL,                -- nulo si el aviso sigue activo
+    esta_activo          INTEGER,             -- 1 = aviso vigente
 
     es_anomalo           INTEGER DEFAULT 0,   -- marcado por Isolation Forest
     precio_estimado      REAL,                -- prediccion del modelo supervisado

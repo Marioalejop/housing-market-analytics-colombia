@@ -32,7 +32,9 @@ extraccion:
 # Mapeo COLUMNA_ORIGEN -> nombre_canonico.
 # Si descargas otro dataset, este es el UNICO bloque que debes tocar.
 mapeo_columnas:
+  id: id_aviso
   start_date: fecha_publicacion
+  end_date: fecha_baja
   lat: latitud
   lon: longitud
   l1: pais
@@ -60,6 +62,9 @@ transformacion:
   # --- Reglas de calidad de datos (Etapa 4: pre-procesamiento) ---
   columnas_obligatorias: ["precio", "superficie_total", "ciudad"]
   clave_duplicados: ["ciudad", "barrio", "superficie_total", "habitaciones", "banos", "precio"]
+  # Columnas cuyo rango solo se aplica cuando hay dato (nulo = caso valido).
+  # dias_publicado es nulo en los avisos aun activos: no se pueden descartar.
+  rangos_admiten_nulo: ["dias_publicado"]
 
   rangos_validos:
     precio: [30000000, 5000000000]      # 30 M a 5.000 M COP
@@ -67,10 +72,15 @@ transformacion:
     habitaciones: [1, 15]
     banos: [1, 10]
     precio_m2: [500000, 20000000]        # COP por m2
+    dias_publicado: [0, 1095]            # hasta 3 anios publicado
 
   # Recorte de colas por percentiles sobre el precio por m2
   percentil_inferior: 0.01
   percentil_superior: 0.99
+
+  # Properati marca los avisos aun vigentes con fecha de baja 9999-12-31.
+  # Cualquier ano por encima de este umbral se interpreta como "aviso activo".
+  anio_centinela_activo: 2900
 
 no_supervisado:
   variables: ["superficie_total", "habitaciones", "banos", "precio_m2", "latitud", "longitud"]

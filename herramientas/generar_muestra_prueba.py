@@ -46,9 +46,19 @@ def generar(n: int, semilla: int = 7) -> pd.DataFrame:
 
     fechas = pd.to_datetime("2020-01-01") + pd.to_timedelta(rng.integers(0, 1000, n), unit="D")
 
+    # Duracion del aviso: los mas caros por m2 tardan mas en salir (rotacion lenta).
+    # Los avisos aun vigentes llevan la fecha centinela que usa Properati.
+    sesgo = (precio_m2 / np.median(precio_m2)).clip(0.5, 2.5)
+    duracion = (rng.gamma(2.2, 45, n) * sesgo).clip(1, 900).round(0)
+    bajas = fechas + pd.to_timedelta(duracion, unit="D")
+    sigue_activo = rng.random(n) < 0.18
+    fecha_baja = np.where(sigue_activo, "9999-12-31", bajas.strftime("%Y-%m-%d"))
+
     df = pd.DataFrame(
         {
+            "id": [f"AV-{k:07d}" for k in range(1, n + 1)],
             "start_date": fechas.strftime("%Y-%m-%d"),
+            "end_date": fecha_baja,
             "lat": lat.round(5),
             "lon": lon.round(5),
             "l1": "Colombia",
@@ -76,6 +86,7 @@ def generar(n: int, semilla: int = 7) -> pd.DataFrame:
     df.loc[idx(0.02), "price"] = 0                    # valores imposibles
     df.loc[idx(0.01), "surface_total"] = 3            # areas absurdas
     df.loc[idx(0.02), "bathrooms"] = 40               # atipicos groseros
+    df.loc[idx(0.01), "end_date"] = "1999-01-01"      # baja anterior a la publicacion
 
     en_usd = idx(0.06)                                 # avisos en otra moneda
     df.loc[en_usd, "price"] = (df.loc[en_usd, "price"] / 4000).round(0)

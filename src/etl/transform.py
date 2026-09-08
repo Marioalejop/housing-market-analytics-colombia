@@ -24,8 +24,11 @@ NUMERICAS = [
 def tipificar(df: pd.DataFrame) -> pd.DataFrame:
     """Convierte cada columna a su tipo correcto. Lo no convertible queda nulo."""
     df = df.copy()
-    if "fecha_publicacion" in df:
-        df["fecha_publicacion"] = pd.to_datetime(df["fecha_publicacion"], errors="coerce")
+    for col in ("fecha_publicacion", "fecha_baja"):
+        if col in df:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+    if "id_aviso" in df:
+        df["id_aviso"] = df["id_aviso"].astype("string").str.strip()
     for col in NUMERICAS:
         if col in df:
             df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -123,6 +126,14 @@ def eliminar_duplicados(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataF
     df = df.drop_duplicates()
     aud.registrar("Duplicados: filas identicas", antes, len(df))
 
+    # El identificador del aviso detecta el mismo registro exportado dos veces,
+    # algo que la comparacion por caracteristicas no distingue de dos inmuebles
+    # realmente parecidos.
+    if "id_aviso" in df.columns:
+        antes = len(df)
+        df = df.drop_duplicates(subset=["id_aviso"], keep="first")
+        aud.registrar("Duplicados: por identificador del aviso", antes, len(df), "clave=id_aviso")
+
     clave = [c for c in t["clave_duplicados"] if c in df.columns]
     antes = len(df)
     df = df.drop_duplicates(subset=clave, keep="first")
@@ -133,12 +144,21 @@ def eliminar_duplicados(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataF
 def aplicar_rangos(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFrame:
     """Reglas de dominio: descarta lo fisicamente imposible (precio 0, casa de 5 m2, 40 banos)."""
     t = cfg["transformacion"]
+    admiten_nulo = set(t.get("rangos_admiten_nulo", []))
+
     for col, (minimo, maximo) in t["rangos_validos"].items():
         if col not in df.columns:
             continue
         antes = len(df)
-        df = df[df[col].between(minimo, maximo)]
-        aud.registrar(f"Rango valido: {col}", antes, len(df), f"[{minimo:,} , {maximo:,}]")
+        dentro = df[col].between(minimo, maximo)
+        # En algunas columnas el nulo es un caso valido, no un dato faltante:
+        # dias_publicado es nulo en los avisos que siguen activos.
+        nota = ""
+        if col in admiten_nulo:
+            dentro = dentro | df[col].isna()
+            nota = " (se conservan los nulos)"
+        df = df[dentro]
+        aud.registrar(f"Rango valido: {col}", antes, len(df), f"[{minimo:,} , {maximo:,}]{nota}")
     return df
 
 
@@ -159,7 +179,7 @@ def recortar_colas(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFrame:
     return df
 
 
-def enriquecer(df: pd.DataFrame) -> pd.DataFrame:
+def enriquecer(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     """Variables derivadas: aqui es donde el ETL crea valor analitico."""
     df = df.copy()
 
@@ -176,6 +196,30 @@ def enriquecer(df: pd.DataFrame) -> pd.DataFrame:
         df["mes"] = f.dt.month
         df["trimestre"] = f.dt.quarter
         df["anio_mes"] = f.dt.to_period("M").astype("string")
+
+    # --- Rotacion del inventario ---
+    # Es la variable que sustenta la causa "no hay revision periodica de avisos
+    # con mucho tiempo publicados" del diagrama de Ishikawa (Etapa 1).
+    if {"fecha_publicacion", "fecha_baja"}.issubset(df.columns):
+        centinela = cfg["transformacion"].get("anio_centinela_activo", 2900)
+        baja = df["fecha_baja"]
+
+        # Los avisos vigentes se marcan con una fecha de baja imposible
+        # (Properati usa 9999-12-31): no son un dato faltante, son casos activos.
+        activo = baja.isna() | (baja.dt.year >= centinela)
+        df["esta_activo"] = activo.astype(int)
+
+        dias = (baja - df["fecha_publicacion"]).dt.days
+        df["dias_publicado"] = dias.where(~activo)   # nulo si sigue activo
+
+        cerrados = df["dias_publicado"].notna().sum()
+        log.info(
+            "Rotacion: %s avisos activos y %s cerrados con duracion calculable "
+            "(mediana %.0f dias).",
+            f"{int(df['esta_activo'].sum()):,}",
+            f"{cerrados:,}",
+            df["dias_publicado"].median() if cerrados else float("nan"),
+        )
 
     # Segmento de tamano: categoria util para segmentar el dashboard
     df["segmento_tamano"] = pd.cut(
@@ -198,7 +242,7 @@ def transformar(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, Auditoria]:
     df = homologar_moneda(df, cfg, aud)
     df = tratar_nulos(df, cfg, aud)
     df = eliminar_duplicados(df, cfg, aud)
-    df = enriquecer(df)
+    df = enriquecer(df, cfg)
     df = aplicar_rangos(df, cfg, aud)
     df = recortar_colas(df, cfg, aud)
 

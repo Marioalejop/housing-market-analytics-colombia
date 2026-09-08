@@ -66,10 +66,11 @@ def construir_estrella(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
     )
 
     cols_hecho = [
-        "id_inmueble", "id_ubicacion", "id_tiempo", "id_tipo",
+        "id_inmueble", "id_aviso", "id_ubicacion", "id_tiempo", "id_tipo",
         "superficie_total", "superficie_cubierta", "habitaciones", "banos",
         "latitud", "longitud", "precio", "precio_m2",
         "area_por_habitacion", "ratio_bano_habitacion", "pct_cubierta", "segmento_tamano",
+        "dias_publicado", "esta_activo",
     ]
     hechos = hechos[[c for c in cols_hecho if c in hechos.columns]]
 
