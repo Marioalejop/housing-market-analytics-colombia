@@ -21,7 +21,11 @@ from matplotlib.patches import FancyBboxPatch
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-PROBLEMA = "Fijación subjetiva\ny poco confiable de\nlos precios de\npublicación"
+# Debe coincidir PALABRA POR PALABRA con el problema central declarado en el
+# documento de la entrega. Si el diagrama y el texto dicen cosas distintas, la
+# rubrica lo penaliza como incoherencia.
+PROBLEMA = ("Dificultad para\nestablecer un precio\nde mercado adecuado\n"
+            "para los inmuebles\nde vivienda")
 
 # (categoria, [causas])  ->  las 3 primeras van arriba, las 3 siguientes abajo
 CAUSAS = [
@@ -33,9 +37,13 @@ CAUSAS = [
         "No existe un proceso estandarizado\npara calcular o validar el precio",
         "No hay revisión periódica de avisos\ncon mucho tiempo publicados",
     ]),
+    # La guia del docente pide NO nombrar todavia las tecnicas (K-Means,
+    # Machine Learning...): en la Etapa 1 se describe el problema, no la
+    # solucion. Por eso las causas hablan de ausencia de herramientas, sin
+    # mencionar el algoritmo.
     ("TECNOLOGÍA", [
-        "No hay modelo analítico\nque estime el precio (regresión)",
-        "No hay segmentación automática\ndel inventario (clustering)",
+        "No hay un modelo que estime\nel precio esperado",
+        "No hay segmentación automática\ndel inventario",
     ]),
     ("PRODUCTO / SERVICIO", [
         "Alta heterogeneidad entre inmuebles\n(área, tipo, ubicación, antigüedad)",
@@ -51,9 +59,20 @@ CAUSAS = [
     ]),
 ]
 
-AZUL = "#1f4e79"
-GRIS = "#404040"
-FONDO_CAT = "#dbe5f1"
+AZUL = "#1f3864"      # espina central y titulos (azul institucional)
+GRIS = "#333333"
+
+# Un color por categoria, en el mismo orden de CAUSAS. Ayuda a leer el
+# diagrama de un vistazo sin depender del color para entenderlo: la etiqueta
+# de texto sigue siendo la que identifica cada categoria.
+COLORES = [
+    "#2b6cb0",   # Personas          - azul
+    "#c05621",   # Procesos          - naranja
+    "#276749",   # Tecnologia        - verde
+    "#9b2c2c",   # Producto/Servicio - rojo
+    "#553c9a",   # Informacion/Datos - morado
+    "#7b4b23",   # Entorno           - cafe
+]
 
 
 def dibujar() -> Path:
@@ -75,18 +94,18 @@ def dibujar() -> Path:
 
     # --- Cabeza: el problema ---
     cabeza = FancyBboxPatch(
-        (13.35, y_espina - 1.25), 3.4, 2.5,
+        (13.35, y_espina - 1.55), 3.4, 3.1,
         boxstyle="round,pad=0.12,rounding_size=0.18",
-        linewidth=2.4, edgecolor=AZUL, facecolor="#f2dcdb",
+        linewidth=2.6, edgecolor=AZUL, facecolor="#f2dcdb",
     )
     ax.add_patch(cabeza)
     ax.text(
-        15.05, y_espina + 0.62, "PROBLEMA CENTRAL",
+        15.05, y_espina + 1.02, "PROBLEMA CENTRAL",
         ha="center", va="center", fontsize=10.5, weight="bold", color=AZUL,
     )
     ax.text(
-        15.05, y_espina - 0.28, PROBLEMA,
-        ha="center", va="center", fontsize=11.5, color=GRIS, linespacing=1.5,
+        15.05, y_espina - 0.22, PROBLEMA,
+        ha="center", va="center", fontsize=11, color=GRIS, linespacing=1.5,
     )
 
     # --- Espinas por categoria ---
@@ -98,22 +117,23 @@ def dibujar() -> Path:
         arriba = i < 3
         x_base = x_bases[i % 3]
         signo = 1 if arriba else -1
+        color = COLORES[i]
 
         x_punta = x_base - desplazamiento
         y_punta = y_espina + signo * alto
 
-        # Linea diagonal de la espina
+        # Linea diagonal de la espina, en el color de la categoria
         ax.plot(
             [x_punta, x_base], [y_punta, y_espina],
-            color=AZUL, linewidth=2.2, solid_capstyle="round", zorder=2,
+            color=color, linewidth=2.6, solid_capstyle="round", zorder=2,
         )
 
-        # Etiqueta de la categoria
+        # Etiqueta de la categoria: fondo solido y texto blanco
         ax.text(
             x_punta, y_punta + signo * 0.42, categoria,
-            ha="center", va="center", fontsize=11.5, weight="bold", color=AZUL,
-            bbox=dict(boxstyle="round,pad=0.42", facecolor=FONDO_CAT,
-                      edgecolor=AZUL, linewidth=1.6),
+            ha="center", va="center", fontsize=11.5, weight="bold", color="white",
+            bbox=dict(boxstyle="round,pad=0.42", facecolor=color,
+                      edgecolor=color, linewidth=1.6),
             zorder=4,
         )
 
@@ -125,7 +145,7 @@ def dibujar() -> Path:
 
             ax.plot(
                 [x_rama, x_rama + 0.28], [y_rama, y_rama],
-                color="#8fa9c4", linewidth=1.5, zorder=2,
+                color=color, linewidth=1.8, zorder=2,
             )
             ax.text(
                 x_rama + 0.40, y_rama, causa,
