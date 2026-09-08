@@ -1,20 +1,61 @@
+# --- Entorno virtual de Python ---
+venv/
+env/
+.venv/
+
+# --- Cache y compilados de Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# --- Datos (pesados o generados, no deben ir a git) ---
 data/raw/*
 data/interim/*
 data/processed/*
+data/export/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/export/.gitkeep
+
+# --- Base de datos generada por el ETL ---
 db/*.db
+db/*.sqlite
+!db/.gitkeep
+
+# --- Modelos entrenados (pueden pesar mucho) ---
 artefactos/*
+!artefactos/.gitkeep
+
+# --- Logs ---
 logs/*
+!logs/.gitkeep
+
+# --- Figuras y tablas generadas por el pipeline ---
 reportes/figuras/*
 reportes/tablas/*
-# Documentos de la entrega: se manejan en la carpeta local y se suben a la
-# plataforma de la Universidad, no al repositorio (son binarios: no se puede
-# ver el diff ni fusionar si dos personas los editan a la vez).
+!reportes/figuras/.gitkeep
+!reportes/tablas/.gitkeep
+
+# --- Documentos de la entrega ---
+# Se manejan en la carpeta local y se suben a la plataforma de la Universidad,
+# no al repositorio (son binarios: no se puede ver el diff ni fusionar).
 *.docx
 *.doc
 *.pdf
 *.pptx
 
-__pycache__/
-*.pyc
-.venv/
-!.gitkeep
+# --- Power BI ---
+# El .pbix puede pesar mucho y no se compara bien en git (es un binario).
+*.pbix
+
+# --- Archivos de sistema / IDE ---
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# --- Variables de entorno / secretos ---
+.env
