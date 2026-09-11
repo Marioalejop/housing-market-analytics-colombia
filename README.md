@@ -34,23 +34,42 @@ maneja en la carpeta local y se sube a la plataforma de la Universidad; no va al
 
 ## 2. Datos (Etapa 2)
 
-**Dataset:** [Properati – Propiedades en Colombia](https://www.kaggle.com/datasets/properati/properties-colombia)
-(`co_properties.csv`, ~1 millón de avisos reales, 2019–2021).
+**Dataset principal:** [Colombia Housing Properties Price](https://www.kaggle.com/datasets/julianusugaortiz/colombia-housing-properties-price)
+(`co_properties.csv`, avisos del portal Properati Colombia): 1.000.000 de avisos y 25 variables,
+publicados entre julio de 2020 y agosto de 2021. CSV de 589 MB (146 MB comprimido). La licencia
+figura como «Unknown» en Kaggle; se usa solo con fines académicos.
 
-Se eligió por tres razones que otros datasets de vivienda no cumplen:
+**Dataset de apoyo:** [Medellín Properties (2023)](https://www.kaggle.com/datasets/cesaregr/medelln-properties)
+(`medellin_properties.csv`): 9.999 inmuebles y 12 variables, licencia Apache 2.0. Trae el área
+completa, el estrato y la antigüedad, que sirven para validar la relación entre área y precio.
 
-- **Viene sucio de verdad** (nulos, duplicados, dos monedas, valores imposibles) → hay ETL real que hacer.
+La comparación de candidatos y la justificación de la selección están en la ficha de la Etapa 2.
+
+Se eligió el dataset principal por tres razones:
+
+- **Viene sucio de verdad** (nulos masivos, duplicados, precios en 0, avisos de venta con periodo
+  de precio mensual) → hay ETL real que hacer.
 - **Tiene dimensiones** (geografía y tiempo) → permite un modelo en estrella y un dashboard con sentido.
 - **Tiene volumen** → obliga a leer por bloques y a usar formatos columnares.
 
-**Instalación de los datos:**
+> **Limitación principal:** entre los 465.424 avisos de venta de casas y apartamentos, el área
+> falta en el 94,5 %. Es el cuello de botella del modelo de precio; la Etapa 4 evaluará si puede
+> recuperarse desde el texto de la descripción.
 
-```
-1. Descarga co_properties.csv desde Kaggle
-2. Colócalo en   data/raw/co_properties.csv
+**Ubicación en Properati:** `l1` país, `l2` departamento, `l3` ciudad, `l4` zona, `l5` localidad y
+`l6` barrio. Como el barrio está vacío en el 94,5 % de los avisos, el análisis por ubicación se
+hace por ciudad y zona.
+
+**Instalación de los datos** (la descarga pública no requiere cuenta de Kaggle):
+
+```bash
+curl -L -o co_properties.zip "https://www.kaggle.com/api/v1/datasets/download/julianusugaortiz/colombia-housing-properties-price"
+unzip co_properties.zip -d data/raw/
 ```
 
-Si el archivo que descargas tiene otros nombres de columna, ajusta **solo** el bloque
+Resultado esperado: `data/raw/co_properties.csv`, de 617.694.986 bytes.
+
+Si usas otro dataset con nombres de columna distintos, ajusta **solo** el bloque
 `mapeo_columnas` de `config.yaml`. El resto del código no se toca.
 
 ---
@@ -130,7 +149,7 @@ que se puede demostrar cuántas filas entraron, cuántas salieron y por qué:
 | 1 | Tipificación | Fechas, numéricos y texto normalizado; lo inconvertible queda nulo |
 | 2 | Filtro de negocio | Solo operaciones de **venta**, solo **casas y apartamentos** |
 | 3 | Homologación de moneda | Avisos en USD convertidos a COP con la tasa del config |
-| 4 | Tratamiento de nulos | Imputación deducida (área), contextual (baños por ciudad+habitaciones) y etiquetado (barrio). Solo se eliminan filas sin precio o sin área |
+| 4 | Tratamiento de nulos | Imputación deducida (área), contextual (baños por ciudad+habitaciones) y etiquetado (zona y barrio). Solo se eliminan filas sin precio o sin área |
 | 5 | Duplicados | Filas idénticas + **identificador del aviso** + clave de negocio (mismo inmueble republicado) |
 | 6 | Enriquecimiento | `precio_m2`, ratios, calendario, `segmento_tamano` y **`dias_publicado`** (rotación) |
 | 7 | Rangos de dominio | Descarta lo físicamente imposible (precio 0, casa de 3 m², 40 baños) |

@@ -17,6 +17,7 @@ SELECT
     h.id_inmueble,
     u.departamento,
     u.ciudad,
+    u.zona,
     u.barrio,
     t.anio,
     t.mes,
@@ -95,6 +96,7 @@ CREATE VIEW v_oportunidades AS
 SELECT
     h.id_inmueble,
     u.ciudad,
+    u.zona,
     u.barrio,
     h.superficie_total,
     h.habitaciones,

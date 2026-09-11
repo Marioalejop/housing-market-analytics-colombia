@@ -14,7 +14,7 @@ from src.utils.log import obtener_logger
 
 log = obtener_logger("etl.transform")
 
-TEXTO = ["pais", "departamento", "ciudad", "barrio", "tipo_propiedad", "tipo_operacion", "moneda"]
+TEXTO = ["pais", "departamento", "ciudad", "zona", "barrio", "tipo_propiedad", "tipo_operacion", "moneda"]
 NUMERICAS = [
     "precio", "superficie_total", "superficie_cubierta",
     "habitaciones", "dormitorios", "banos", "latitud", "longitud",
@@ -102,9 +102,10 @@ def tratar_nulos(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFrame:
         )
         df["banos"] = df["banos"].fillna(df["banos"].median())
 
-    # 4. Barrio sin dato: no se inventa, se etiqueta
-    if "barrio" in df:
-        df["barrio"] = df["barrio"].fillna("Sin Dato")
+    # 4. Zona y barrio sin dato: no se inventan, se etiquetan
+    for col in ("zona", "barrio"):
+        if col in df:
+            df[col] = df[col].fillna("Sin Dato")
 
     # 5. Lo obligatorio no se imputa: sin precio o sin area el registro no sirve
     antes = len(df)

@@ -40,7 +40,9 @@ mapeo_columnas:
   l1: pais
   l2: departamento
   l3: ciudad
-  l4: barrio
+  # Segun la descripcion del dataset en Kaggle: l4 = zona, l5 = localidad, l6 = barrio.
+  l4: zona
+  l6: barrio
   rooms: habitaciones
   bedrooms: dormitorios
   bathrooms: banos
@@ -61,7 +63,8 @@ transformacion:
 
   # --- Reglas de calidad de datos (Etapa 4: pre-procesamiento) ---
   columnas_obligatorias: ["precio", "superficie_total", "ciudad"]
-  clave_duplicados: ["ciudad", "barrio", "superficie_total", "habitaciones", "banos", "precio"]
+  # Se usa la zona y no el barrio: en Properati el barrio (l6) esta vacio en el 94,5 % de los avisos.
+  clave_duplicados: ["ciudad", "zona", "superficie_total", "habitaciones", "banos", "precio"]
   # Columnas cuyo rango solo se aplica cuando hay dato (nulo = caso valido).
   # dias_publicado es nulo en los avisos aun activos: no se pueden descartar.
   rangos_admiten_nulo: ["dias_publicado"]

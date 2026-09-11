@@ -45,7 +45,7 @@ def _construir_dimension(df: pd.DataFrame, columnas: list[str], nombre_id: str) 
 
 def construir_estrella(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
     """Descompone la tabla plana en dimensiones + hechos."""
-    cols_ubi = [c for c in ["pais", "departamento", "ciudad", "barrio"] if c in df.columns]
+    cols_ubi = [c for c in ["pais", "departamento", "ciudad", "zona", "barrio"] if c in df.columns]
     cols_tipo = [c for c in ["tipo_propiedad", "tipo_operacion"] if c in df.columns]
     cols_tiempo = [c for c in ["anio", "mes", "trimestre", "anio_mes"] if c in df.columns]
 

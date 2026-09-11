@@ -20,7 +20,8 @@ CREATE TABLE dim_ubicacion (
     pais         TEXT,
     departamento TEXT,
     ciudad       TEXT,
-    barrio       TEXT
+    zona         TEXT,                -- l4 en Properati
+    barrio       TEXT                 -- l6 en Properati (vacio en la mayoria de avisos)
 );
 
 CREATE TABLE dim_tiempo (

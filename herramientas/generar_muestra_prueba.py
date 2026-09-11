@@ -25,7 +25,8 @@ CIUDADES = {
     "Bucaramanga": ("Santander", 7.12, -73.12, 3.4e6),
     "Cartagena": ("Bolívar", 10.39, -75.51, 5.8e6),
 }
-BARRIOS = ["Centro", "Norte", "Sur", "Chapinero", "El Poblado", "Laureles", "Ciudad Jardín"]
+ZONAS = ["Norte", "Sur", "Centro", "Oriente", "Occidente"]
+BARRIOS = ["Chapinero", "El Poblado", "Laureles", "Ciudad Jardín", "Cabecera", "Riomar"]
 
 
 def generar(n: int, semilla: int = 7) -> pd.DataFrame:
@@ -64,7 +65,8 @@ def generar(n: int, semilla: int = 7) -> pd.DataFrame:
             "l1": "Colombia",
             "l2": depto,
             "l3": ciudad,
-            "l4": rng.choice(BARRIOS, n),
+            "l4": rng.choice(ZONAS, n),
+            "l6": rng.choice(BARRIOS, n),
             "rooms": habitaciones,
             "bedrooms": np.clip(habitaciones - 1, 1, None),
             "bathrooms": banos,
@@ -82,6 +84,7 @@ def generar(n: int, semilla: int = 7) -> pd.DataFrame:
     df.loc[idx(0.12), "surface_covered"] = np.nan     # nulos imputables
     df.loc[idx(0.08), "bathrooms"] = np.nan           # nulos con imputacion contextual
     df.loc[idx(0.05), "l4"] = np.nan                  # nulos que se etiquetan
+    df.loc[idx(0.90), "l6"] = np.nan                  # barrio casi siempre vacio, como en Properati
     df.loc[idx(0.04), "price"] = np.nan               # nulos NO imputables -> se eliminan
     df.loc[idx(0.02), "price"] = 0                    # valores imposibles
     df.loc[idx(0.01), "surface_total"] = 3            # areas absurdas
