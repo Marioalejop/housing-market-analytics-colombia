@@ -1,0 +1,501 @@
+{
+ "dataset": {
+  "filas": 1000000,
+  "columnas": 25,
+  "periodo": [
+   "2020-07-26",
+   "2021-08-19"
+  ],
+  "megabytes": 617.7
+ },
+ "apoyo": {
+  "filas": 9999,
+  "columnas": 12
+ },
+ "calidad": {
+  "nulos": {
+   "surface_total": 95.88,
+   "l6": 94.53,
+   "surface_covered": 94.01,
+   "price_period": 87.88,
+   "l5": 84.09,
+   "rooms": 82.79,
+   "l4": 72.6,
+   "bedrooms": 62.4,
+   "lon": 25.97,
+   "lat": 25.97,
+   "bathrooms": 20.05,
+   "l3": 6.28,
+   "currency": 0.06,
+   "description": 0.06,
+   "price": 0.05
+  },
+  "problemas": {
+   "Filas completamente duplicadas": 0,
+   "Identificadores repetidos": 0,
+   "Precio en cero": 62,
+   "Precio mayor a 5.000 millones": 6150,
+   "Ventas con precio mensual (arriendos disfrazados)": 80012,
+   "Área construida mayor que la total": 4368,
+   "Área total mayor a 1.000 m²": 3678,
+   "Dormitorios en cero (= no informado)": 31356,
+   "Dormitorios mayores que los ambientes": 11,
+   "Baños mayores a 10": 845,
+   "Coordenadas fuera de Colombia": 138,
+   "Moneda distinta de COP": 48,
+   "País distinto de Colombia": 2,
+   "Avisos vigentes (fecha de baja 9999-12-31)": 143986
+  },
+  "texto": {
+   "con_telefono": 25949,
+   "menciona_m2": 205089
+  },
+  "area": {
+   "universo": 465424,
+   "con_area": 26199,
+   "sin_area": 439225,
+   "sin_area_pct": 94.37,
+   "recuperable_texto": 98094
+  }
+ },
+ "limpieza": [
+  {
+   "regla": "Datos originales",
+   "decisión": "—",
+   "por qué": "Punto de partida",
+   "filas": 1000000,
+   "elimina": 0
+  },
+  {
+   "regla": "Solo ventas",
+   "decisión": "Filtrar",
+   "por qué": "El arriendo tiene otra escala de precio",
+   "filas": 571884,
+   "elimina": 428116
+  },
+  {
+   "regla": "Solo casas y apartamentos",
+   "decisión": "Filtrar",
+   "por qué": "Lotes, locales y oficinas no son vivienda",
+   "filas": 465424,
+   "elimina": 106460
+  },
+  {
+   "regla": "Solo Colombia",
+   "decisión": "Filtrar",
+   "por qué": "Hay avisos de otro país que contaminan el análisis",
+   "filas": 465423,
+   "elimina": 1
+  },
+  {
+   "regla": "Sin ventas con precio mensual",
+   "decisión": "Filtrar",
+   "por qué": "Un precio mensual delata un arriendo publicado como venta",
+   "filas": 401876,
+   "elimina": 63547
+  },
+  {
+   "regla": "Solo pesos colombianos",
+   "decisión": "Filtrar",
+   "por qué": "No se pueden comparar monedas distintas; son muy pocos avisos",
+   "filas": 401625,
+   "elimina": 251
+  },
+  {
+   "regla": "Incoherencias anuladas",
+   "decisión": "Poner en nulo",
+   "por qué": "2,580 áreas incoherentes y 61 coordenadas imposibles: no se adivinan",
+   "filas": 401625,
+   "elimina": 0
+  },
+  {
+   "regla": "Con precio y área",
+   "decisión": "Eliminar",
+   "por qué": "Sin la variable objetivo o sin el área, el aviso no sirve para predecir",
+   "filas": 23058,
+   "elimina": 378567
+  },
+  {
+   "regla": "Precio entre 30 y 5.000 millones",
+   "decisión": "Filtrar",
+   "por qué": "Descarta precios en cero y valores absurdos de billones",
+   "filas": 22943,
+   "elimina": 115
+  },
+  {
+   "regla": "Área entre 20 y 1.000 m²",
+   "decisión": "Filtrar",
+   "por qué": "Elimina áreas físicamente imposibles",
+   "filas": 21734,
+   "elimina": 1209
+  },
+  {
+   "regla": "Dormitorios y baños entre 1 y 10",
+   "decisión": "Eliminar",
+   "por qué": "Son predictores del modelo: no se imputan, pierden pocos avisos",
+   "filas": 21381,
+   "elimina": 353
+  },
+  {
+   "regla": "Sin identificadores repetidos",
+   "decisión": "Deduplicar",
+   "por qué": "Un mismo registro exportado dos veces pesaría doble",
+   "filas": 21381,
+   "elimina": 0
+  },
+  {
+   "regla": "Sin republicaciones",
+   "decisión": "Deduplicar",
+   "por qué": "El mismo inmueble publicado varias veces pesaría más en el modelo",
+   "filas": 16535,
+   "elimina": 4846
+  },
+  {
+   "regla": "Recorte de colas del precio por m² (p1–p99)",
+   "decisión": "Filtrar",
+   "por qué": "Los extremos distorsionan promedios y modelo",
+   "filas": 16204,
+   "elimina": 331
+  }
+ ],
+ "inicial": 1000000,
+ "final": 16204,
+ "exploracion": {
+  "ciudades": [
+   {
+    "ciudad": "Bogotá D.C",
+    "avisos": 5238,
+    "m2": 5.42,
+    "precio": 550.0
+   },
+   {
+    "ciudad": "Cartagena",
+    "avisos": 362,
+    "m2": 4.58,
+    "precio": 500.0
+   },
+   {
+    "ciudad": "Envigado",
+    "avisos": 498,
+    "m2": 4.46,
+    "precio": 462.5
+   },
+   {
+    "ciudad": "Medellín",
+    "avisos": 986,
+    "m2": 4.12,
+    "precio": 480.0
+   },
+   {
+    "ciudad": "Sabaneta",
+    "avisos": 213,
+    "m2": 4.08,
+    "precio": 300.39
+   },
+   {
+    "ciudad": "Itagui",
+    "avisos": 105,
+    "m2": 3.55,
+    "precio": 240.0
+   },
+   {
+    "ciudad": "Puerto Colombia",
+    "avisos": 107,
+    "m2": 3.33,
+    "precio": 395.92
+   },
+   {
+    "ciudad": "Chía",
+    "avisos": 263,
+    "m2": 3.28,
+    "precio": 491.73
+   }
+  ],
+  "zonas_bogota": [
+   {
+    "zona": "Zona Suroccidental",
+    "avisos": 232,
+    "m2": 3.11
+   },
+   {
+    "zona": "Zona Sur",
+    "avisos": 142,
+    "m2": 3.12
+   },
+   {
+    "zona": "Zona Occidental",
+    "avisos": 276,
+    "m2": 4.05
+   },
+   {
+    "zona": "Zona Noroccidental",
+    "avisos": 1172,
+    "m2": 4.47
+   },
+   {
+    "zona": "Zona Centro",
+    "avisos": 117,
+    "m2": 5.49
+   },
+   {
+    "zona": "Zona Norte",
+    "avisos": 1932,
+    "m2": 5.65
+   },
+   {
+    "zona": "Zona Chapinero",
+    "avisos": 1367,
+    "m2": 7.04
+   }
+  ],
+  "correlaciones": {
+   "precio_millones": 1.0,
+   "area": 0.692,
+   "bedrooms": 0.286,
+   "bathrooms": 0.625
+  },
+  "corr_medellin": 0.842,
+  "rotacion": [
+   {
+    "ciudad": "Cartagena",
+    "cerrados": 154,
+    "dias": 127.5,
+    "lentos": 39.0
+   },
+   {
+    "ciudad": "Sabaneta",
+    "cerrados": 121,
+    "dias": 41.0,
+    "lentos": 18.2
+   },
+   {
+    "ciudad": "Bogotá D.C",
+    "cerrados": 4839,
+    "dias": 34.0,
+    "lentos": 5.0
+   },
+   {
+    "ciudad": "Envigado",
+    "cerrados": 361,
+    "dias": 32.0,
+    "lentos": 6.6
+   },
+   {
+    "ciudad": "Medellín",
+    "cerrados": 547,
+    "dias": 30.0,
+    "lentos": 13.0
+   },
+   {
+    "ciudad": "Chía",
+    "cerrados": 231,
+    "dias": 30.0,
+    "lentos": 1.7
+   },
+   {
+    "ciudad": "Cali",
+    "cerrados": 2068,
+    "dias": 27.0,
+    "lentos": 7.0
+   },
+   {
+    "ciudad": "Bello",
+    "cerrados": 178,
+    "dias": 26.0,
+    "lentos": 3.4
+   },
+   {
+    "ciudad": "Barranquilla",
+    "cerrados": 1526,
+    "dias": 22.5,
+    "lentos": 8.2
+   },
+   {
+    "ciudad": "Pereira",
+    "cerrados": 149,
+    "dias": 15.0,
+    "lentos": 0.0
+   },
+   {
+    "ciudad": "Jamundí",
+    "cerrados": 218,
+    "dias": 13.5,
+    "lentos": 5.0
+   },
+   {
+    "ciudad": "Bucaramanga",
+    "cerrados": 239,
+    "dias": 10.0,
+    "lentos": 3.3
+   }
+  ],
+  "pct_vigentes": 21.8
+ },
+ "division": {
+  "entrenamiento": 12963,
+  "prueba": 3241
+ },
+ "modelos": [
+  {
+   "modelo": "Línea base (predice la mediana)",
+   "R2": -0.1191,
+   "RMSE": 582.8312,
+   "MAE": 329.9095,
+   "MAPE": 62.7761
+  },
+  {
+   "modelo": "Regresión lineal",
+   "R2": 0.5923,
+   "RMSE": 351.7761,
+   "MAE": 209.2018,
+   "MAPE": 44.7106
+  },
+  {
+   "modelo": "Gradient Boosting (sin ciudad)",
+   "R2": 0.6675,
+   "RMSE": 317.6616,
+   "MAE": 176.5522,
+   "MAPE": 31.6826
+  },
+  {
+   "modelo": "Gradient Boosting (con ciudad)",
+   "R2": 0.7891,
+   "RMSE": 252.9825,
+   "MAE": 133.71,
+   "MAPE": 22.4222
+  }
+ ],
+ "lineal_negativas": 27,
+ "importancia": {
+  "Área": 1.1529,
+  "Ciudad": 0.2649,
+  "Baños": 0.1365,
+  "Es casa (no apartamento)": 0.0505,
+  "Dormitorios": 0.0235
+ },
+ "seleccion_k": [
+  {
+   "k": 2,
+   "inercia": 43585.1,
+   "silueta": 0.4084
+  },
+  {
+   "k": 3,
+   "inercia": 34130.3,
+   "silueta": 0.3256
+  },
+  {
+   "k": 4,
+   "inercia": 28317.3,
+   "silueta": 0.3255
+  },
+  {
+   "k": 5,
+   "inercia": 24636.1,
+   "silueta": 0.3378
+  },
+  {
+   "k": 6,
+   "inercia": 21860.2,
+   "silueta": 0.2983
+  },
+  {
+   "k": 7,
+   "inercia": 19804.8,
+   "silueta": 0.2935
+  },
+  {
+   "k": 8,
+   "inercia": 17978.7,
+   "silueta": 0.2798
+  }
+ ],
+ "segmentos": [
+  {
+   "avisos": 8416,
+   "area": 97.44,
+   "precio": 287.57,
+   "m2": 3.06,
+   "dormitorios": 2.91,
+   "banos": 2.13,
+   "segmento": "Económicos estándar",
+   "% del total": 51.9
+  },
+  {
+   "avisos": 2614,
+   "area": 76.04,
+   "precio": 483.16,
+   "m2": 6.17,
+   "dormitorios": 1.72,
+   "banos": 1.92,
+   "segmento": "Compactos en zona cara",
+   "% del total": 16.1
+  },
+  {
+   "avisos": 3792,
+   "area": 187.13,
+   "precio": 998.66,
+   "m2": 5.24,
+   "dormitorios": 3.29,
+   "banos": 3.78,
+   "segmento": "Amplios de precio alto",
+   "% del total": 23.4
+  },
+  {
+   "avisos": 1382,
+   "area": 472.42,
+   "precio": 1211.76,
+   "m2": 2.6,
+   "dormitorios": 4.76,
+   "banos": 4.58,
+   "segmento": "Grandes propiedades",
+   "% del total": 8.5
+  }
+ ],
+ "silueta_k4": 0.3255,
+ "oportunidades": {
+  "umbral_pct": 15,
+  "por_debajo": 4249,
+  "por_encima": 4785,
+  "cerca": 7170,
+  "rotacion": [
+   {
+    "estado_precio": "Cerca del valor estimado",
+    "avisos": 5683,
+    "dias_mediana": 30.0,
+    "pct_mas_180": 7.3
+   },
+   {
+    "estado_precio": "Por debajo del valor estimado",
+    "avisos": 3366,
+    "dias_mediana": 29.5,
+    "pct_mas_180": 8.8
+   },
+   {
+    "estado_precio": "Por encima del valor estimado",
+    "avisos": 3627,
+    "dias_mediana": 29.0,
+    "pct_mas_180": 7.2
+   }
+  ],
+  "sobrevalorados_mas_lentos": false
+ },
+ "limitaciones": [
+  "El ÁREA falta en el 94.4 % de los avisos de venta de vivienda: el modelo se entrena con 16,204 de 1,000,000 avisos (1.6 %).",
+  "Los avisos registran el PRECIO PEDIDO, no el precio de cierre: se mide la oferta, no la transacción.",
+  "Datos de 2020 y 2021: no reflejan los precios actuales.",
+  "El modelo solo usa área, dormitorios, baños, tipo de inmueble y ciudad. Con un error medio de 134 M, no sustituye una tasación.",
+  "La zona de la ciudad no entra al modelo: está vacía en la mayoría de los avisos.",
+  "El archivo tiene exactamente 1,000,000 filas: parece un corte de exportación, así que no se puede asumir que contiene todos los avisos del periodo.",
+  "Licencia «Unknown» en Kaggle: uso exclusivamente académico.",
+  "La medición de rotación excluye el 21.8 % de avisos aún vigentes: subestima la duración real.",
+  "Que un aviso deje de publicarse no significa que el inmueble se haya vendido: no tenemos las ventas reales.",
+  "La segmentación tiene una separación moderada (silueta 0.33); la elección de 4 grupos es de negocio, no estadística."
+ ],
+ "mejoras": [
+  "Recuperar el área desde el texto del aviso: 98,094 avisos sin área la mencionan (falta validar la extracción).",
+  "Añadir la zona, el estrato y la antigüedad, como en el dataset de Medellín.",
+  "Usar datos actualizados y precios de cierre.",
+  "Publicar el modelo como servicio para el portal inmobiliario."
+ ]
+}

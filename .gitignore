@@ -1,20 +1,26 @@
-data/raw/*
-data/interim/*
-data/processed/*
-db/*.db
-artefactos/*
-logs/*
-reportes/figuras/*
-reportes/tablas/*
-# Documentos de la entrega: se manejan en la carpeta local y se suben a la
-# plataforma de la Universidad, no al repositorio (son binarios: no se puede
-# ver el diff ni fusionar si dos personas los editan a la vez).
+# Dataset principal: pesa 618 MB y el notebook lo descarga solo
+datos/co_properties.csv
+datos/*.zip
+
+# Cache y entornos
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Documentos de la entrega: se suben a la plataforma de la Universidad, no al repositorio
 *.docx
 *.doc
 *.pdf
 *.pptx
 
-__pycache__/
-*.pyc
-.venv/
-!.gitkeep
+# Power BI
+*.pbix
+
+# Sistema, editores y secretos
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+.env
