@@ -147,16 +147,16 @@ def _perfilar(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
         .reset_index()
     )
 
-    # Etiqueta legible segun el precio por m2 relativo del grupo
-    orden = perfil["precio_m2_prom"].rank(pct=True)
-    nombres = pd.cut(
-        orden,
-        bins=[0, 0.25, 0.5, 0.75, 1.0],
-        labels=["Economico", "Estandar", "Alto", "Premium"],
-        include_lowest=True,
-    ).astype(str)
+    # Etiqueta legible: los grupos se ordenan por PRECIO TOTAL promedio, que es
+    # como el negocio entiende un segmento ("vivienda economica" o "premium").
+    # El area y el precio por m2 quedan en la descripcion, porque un segmento
+    # caro puede serlo por tamano o por ubicacion. El numero hace unico el nombre.
+    NIVELES = ["Economico", "Medio", "Medio alto", "Alto", "Premium", "Lujo", "Exclusivo"]
+    orden = perfil["precio_promedio"].rank(method="first").astype(int)
+    k = len(perfil)
     perfil["nombre_segmento"] = [
-        f"S{i} - {n}" for i, n in zip(perfil["id_segmento"], nombres)
+        f"S{puesto} - {NIVELES[min(int((puesto - 1) * len(NIVELES) / k), len(NIVELES) - 1)]}"
+        for puesto in orden
     ]
     perfil["descripcion"] = perfil.apply(
         lambda r: (

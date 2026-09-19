@@ -129,7 +129,8 @@ def _red_neuronal(n_entradas: int, cfg: dict):
             keras.layers.Dense(1),
         ]
     )
-    modelo.compile(optimizer=keras.optimizers.Adam(1e-3), loss="mse", metrics=["mae"])
+    # Tasa de aprendizaje prudente: con 1e-3 la red diverge en escala logaritmica.
+    modelo.compile(optimizer=keras.optimizers.Adam(3e-4), loss="mse", metrics=["mae"])
     return modelo
 
 
@@ -145,6 +146,15 @@ def entrenar(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # Se aprende sobre el logaritmo del precio y se devuelve a pesos al evaluar
     y_train_log, y_test_real = np.log1p(y_train), y_test.to_numpy()
+
+    # Al invertir el logaritmo, un valor extremo se convierte en un precio
+    # absurdo. Se acota la prediccion al rango de precios que el ETL acepta.
+    rango = cfg["transformacion"]["rangos_validos"]["precio"]
+    limites_log = (np.log1p(rango[0]), np.log1p(rango[1]))
+
+    def a_pesos(pred_log):
+        """Devuelve la prediccion a pesos, dentro del rango valido."""
+        return np.expm1(np.clip(pred_log, *limites_log))
 
     prep = _preprocesador(numericas, categoricas)
     X_train_t = prep.fit_transform(X_train)
@@ -167,7 +177,7 @@ def entrenar(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     for nombre, modelo in clasicos.items():
         inicio = time.perf_counter()
         modelo.fit(X_train_t, y_train_log)
-        y_pred = np.expm1(modelo.predict(X_test_t))
+        y_pred = a_pesos(modelo.predict(X_test_t))
         duracion = time.perf_counter() - inicio
 
         m = metricas(y_test_real, y_pred)
@@ -198,7 +208,7 @@ def entrenar(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
         ],
         verbose=0,
     )
-    y_pred = np.expm1(red.predict(X_test_t, verbose=0).flatten())
+    y_pred = a_pesos(red.predict(X_test_t, verbose=0).flatten())
     duracion = time.perf_counter() - inicio
 
     m = metricas(y_test_real, y_pred)

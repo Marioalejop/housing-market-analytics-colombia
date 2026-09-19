@@ -50,6 +50,7 @@ mapeo_columnas:
   surface_covered: superficie_cubierta
   price: precio
   currency: moneda
+  price_period: periodo_precio
   property_type: tipo_propiedad
   operation_type: tipo_operacion
 
@@ -57,6 +58,10 @@ transformacion:
   # --- Filtros de negocio (Etapa 1: que problema respondemos) ---
   operaciones_validas: ["Venta"]
   tipos_propiedad_validos: ["Casa", "Apartamento"]
+  paises_validos: ["Colombia"]
+  # Data Clinic: un aviso de VENTA con periodo de precio mensual publica en
+  # realidad un arriendo. Son 80.012 avisos y distorsionan el precio.
+  periodos_precio_excluidos: ["Mensual"]
   moneda_objetivo: "COP"
   # Tasa usada para homologar avisos publicados en USD
   tasa_usd_cop: 4000
@@ -81,6 +86,12 @@ transformacion:
   percentil_inferior: 0.01
   percentil_superior: 0.99
 
+  # --- Coherencia entre columnas (Data Clinic) ---
+  # Colombia continental: coordenadas fuera de este recuadro son imposibles.
+  bbox_colombia:
+    lat: [-4.3, 13.5]
+    lon: [-79.1, -66.8]
+
   # Properati marca los avisos aun vigentes con fecha de baja 9999-12-31.
   # Cualquier ano por encima de este umbral se interpreta como "aviso activo".
   anio_centinela_activo: 2900
@@ -90,7 +101,11 @@ no_supervisado:
   contaminacion_isolation_forest: 0.02   # % esperado de avisos anomalos
   k_min: 2
   k_max: 10
-  k_elegido: null       # null = lo decide la silueta automaticamente
+  # La silueta es casi plana entre k=2 y k=10 (0,271 a 0,287 con datos reales):
+  # elegir el maximo seria quedarse con ruido. Se fija k=4 por interpretabilidad
+  # de negocio (economico, estandar, alto y premium), y la curva queda como
+  # evidencia de que ningun k destaca.
+  k_elegido: 4
   semilla: 42
 
 supervisado:

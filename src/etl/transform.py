@@ -14,7 +14,8 @@ from src.utils.log import obtener_logger
 
 log = obtener_logger("etl.transform")
 
-TEXTO = ["pais", "departamento", "ciudad", "zona", "barrio", "tipo_propiedad", "tipo_operacion", "moneda"]
+TEXTO = ["pais", "departamento", "ciudad", "zona", "barrio", "tipo_propiedad", "tipo_operacion",
+         "moneda", "periodo_precio"]
 NUMERICAS = [
     "precio", "superficie_total", "superficie_cubierta",
     "habitaciones", "dormitorios", "banos", "latitud", "longitud",
@@ -50,6 +51,19 @@ def filtrar_negocio(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFrame
     antes = len(df)
     df = df[df["tipo_propiedad"].isin(t["tipos_propiedad_validos"])]
     aud.registrar("Filtro: casas y apartamentos", antes, len(df), str(t["tipos_propiedad_validos"]))
+
+    if "pais" in df.columns:
+        antes = len(df)
+        df = df[df["pais"].isin(t["paises_validos"])]
+        aud.registrar("Filtro: solo Colombia", antes, len(df), str(t["paises_validos"]))
+
+    # Data Clinic: el periodo de precio "Mensual" delata un arriendo publicado
+    # como venta. El precio no es comparable con el resto.
+    if "periodo_precio" in df.columns:
+        antes = len(df)
+        df = df[~df["periodo_precio"].isin(t["periodos_precio_excluidos"])]
+        aud.registrar("Filtro: ventas con precio mensual", antes, len(df),
+                      "periodo_precio en " + str(t["periodos_precio_excluidos"]))
     return df
 
 
@@ -75,6 +89,50 @@ def homologar_moneda(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFram
         len(df),
         f"{convertidos:,} avisos en USD convertidos a tasa {tasa:,}",
     )
+    return df
+
+
+def corregir_incoherencias(df: pd.DataFrame, cfg: dict, aud: Auditoria) -> pd.DataFrame:
+    """Anula los valores imposibles en vez de adivinarlos (reglas del Data Clinic).
+
+    Estas reglas no eliminan filas: dejan el dato en nulo. Si la columna es
+    obligatoria, la fila caera despues en el paso de nulos y quedara registrado
+    alli; si no lo es, el aviso se conserva sin ese dato.
+    """
+    df = df.copy()
+    n = len(df)
+
+    # 1. El area construida no puede superar al area total: no se sabe cual es
+    #    la correcta, asi que se anulan las dos.
+    if {"superficie_total", "superficie_cubierta"}.issubset(df.columns):
+        incoherente = df["superficie_cubierta"] > df["superficie_total"]
+        df.loc[incoherente, ["superficie_total", "superficie_cubierta"]] = np.nan
+        aud.registrar("Coherencia: area cubierta > area total", n, n,
+                      f"{int(incoherente.sum()):,} areas anuladas")
+
+    # 2. Cero dormitorios significa "no informado", no un inmueble sin alcobas.
+    if "dormitorios" in df.columns:
+        ceros = df["dormitorios"] == 0
+        df.loc[ceros, "dormitorios"] = np.nan
+        aud.registrar("Coherencia: dormitorios en cero", n, n,
+                      f"{int(ceros.sum()):,} valores pasados a nulo")
+
+        if "habitaciones" in df.columns:
+            mayor = df["dormitorios"] > df["habitaciones"]
+            df.loc[mayor, "dormitorios"] = np.nan
+            aud.registrar("Coherencia: dormitorios > ambientes", n, n,
+                          f"{int(mayor.sum()):,} valores anulados")
+
+    # 3. Coordenadas fuera de Colombia: se anulan, pero el aviso se conserva
+    #    porque la ciudad sigue siendo valida.
+    if {"latitud", "longitud"}.issubset(df.columns):
+        caja = cfg["transformacion"]["bbox_colombia"]
+        dentro = (df["latitud"].between(*caja["lat"]) & df["longitud"].between(*caja["lon"]))
+        fuera = df["latitud"].notna() & ~dentro
+        df.loc[fuera, ["latitud", "longitud"]] = np.nan
+        aud.registrar("Coherencia: coordenadas fuera de Colombia", n, n,
+                      f"{int(fuera.sum()):,} coordenadas anuladas")
+
     return df
 
 
@@ -241,6 +299,7 @@ def transformar(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, Auditoria]:
     df = tipificar(df)
     df = filtrar_negocio(df, cfg, aud)
     df = homologar_moneda(df, cfg, aud)
+    df = corregir_incoherencias(df, cfg, aud)
     df = tratar_nulos(df, cfg, aud)
     df = eliminar_duplicados(df, cfg, aud)
     df = enriquecer(df, cfg)

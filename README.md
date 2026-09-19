@@ -147,10 +147,11 @@ que se puede demostrar cuántas filas entraron, cuántas salieron y por qué:
 | # | Paso | Criterio |
 |---|---|---|
 | 1 | Tipificación | Fechas, numéricos y texto normalizado; lo inconvertible queda nulo |
-| 2 | Filtro de negocio | Solo operaciones de **venta**, solo **casas y apartamentos** |
+| 2 | Filtro de negocio | Solo **venta**, solo **casas y apartamentos**, solo **Colombia** y sin avisos con precio **mensual** (arriendos publicados como venta) |
 | 3 | Homologación de moneda | Avisos en USD convertidos a COP con la tasa del config |
 | 4 | Tratamiento de nulos | Imputación deducida (área), contextual (baños por ciudad+habitaciones) y etiquetado (zona y barrio). Solo se eliminan filas sin precio o sin área |
 | 5 | Duplicados | Filas idénticas + **identificador del aviso** + clave de negocio (mismo inmueble republicado) |
+| 5b | **Coherencia (Data Clinic)** | Área cubierta mayor que la total, `dormitorios = 0` (no informado), dormitorios mayores que ambientes y coordenadas fuera de Colombia: se **anulan**, no se adivinan |
 | 6 | Enriquecimiento | `precio_m2`, ratios, calendario, `segmento_tamano` y **`dias_publicado`** (rotación) |
 | 7 | Rangos de dominio | Descarta lo físicamente imposible (precio 0, casa de 3 m², 40 baños) |
 | 8 | Recorte de colas | Percentiles 1 % y 99 % del precio por m² |
